@@ -3,57 +3,41 @@ version: "3.9"
 services:
   mysql:
     image: mysql:8
-    container_name: ticket-mysql
+    container_name: online-ticket-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: PVenu@799
-      MYSQL_DATABASE: ticket_booking
+      MYSQL_DATABASE: online_ticket_booking
     ports:
-      - "3308:3306"
+      - "3307:3306"   # original port kept
     volumes:
       - mysql_data:/var/lib/mysql
-    networks:
-      - ticket-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pPVenu@799"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     build:
-      context: .
+      context: ./Backend
       dockerfile: Dockerfile.backend
-    container_name: ticket-backend
+    container_name: online-ticket-backend
     restart: always
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ticket_booking?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/online_ticket_booking?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: PVenu@799
     ports:
-      - "9092:9092"
-    networks:
-      - ticket-net
+      - "8081:8081"   # original port kept
 
   frontend:
     build:
-      context: .
+      context: ./ticket-booking-system
       dockerfile: Dockerfile.frontend
-    container_name: ticket-frontend
+    container_name: online-ticket-frontend
     restart: always
     depends_on:
       - backend
     ports:
-      - "9091:9091"
-    networks:
-      - ticket-net
+      - "3000:80"   # original port kept
 
 volumes:
   mysql_data:
-
-networks:
-  ticket-net:
-    driver: bridge
