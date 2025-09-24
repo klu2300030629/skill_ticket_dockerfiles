@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: PVenu@799
       MYSQL_DATABASE: online_ticket_booking
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
