@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: ticket-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: PVenu@799
+      MYSQL_DATABASE: ticket_booking
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ticket-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pPVenu@799"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ticket-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ticket_booking?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: PVenu@799
+    ports:
+      - "9092:9092"
+    networks:
+      - ticket-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ticket-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "9091:9091"
+    networks:
+      - ticket-net
+
+volumes:
+  mysql_data:
+
+networks:
+  ticket-net:
+    driver: bridge

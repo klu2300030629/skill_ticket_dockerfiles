@@ -1,0 +1,26 @@
+# Stage 1: Build React app
+FROM node:18 AS build
+WORKDIR /app
+
+# Install git
+RUN apt-get update && apt-get install -y git
+
+# Clone your frontend repo
+RUN git clone https://github.com/klu2300030629/ticket-frontend.git .
+
+# Build React app
+RUN npm install
+RUN npm run build
+
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+
+# Remove default nginx content
+RUN rm -rf ./*
+
+# Copy React build output
+COPY --from=build /app/build .
+
+EXPOSE 9091
+CMD ["nginx", "-g", "daemon off;"]
