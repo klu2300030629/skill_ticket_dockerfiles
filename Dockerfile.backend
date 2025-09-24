@@ -1,19 +1,24 @@
-# Stage 1: Build with Maven + JDK 21
+# Stage 1: Build with Maven and Java 21
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Install git
+# Install git to clone repo
 RUN apt-get update && apt-get install -y git
 
-# Clone your backend repo
+# Clone backend repo
 RUN git clone https://github.com/klu2300030629/ticket-backend.git .
 
-# Build Spring Boot JAR
+# Build the project
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run JAR
-FROM eclipse-temurin:21-jdk
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-EXPOSE 9092
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Stage 2: Run with Tomcat
+FROM tomcat:9.0-jdk17-temurin
+
+# Remove default webapps
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copy WAR from build stage
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/back1.war
+
+EXPOSE 8080
+CMD ["catalina.sh", "run"]
